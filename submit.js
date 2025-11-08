@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: 'Telegram gönderimi başarısız.', details: telegramResponse.data.description });
     }
 
-    // === CONVERSIONS API PAYLOAD (DOĞRU YAPI) ===
+    // === CONVERSIONS API PAYLOAD (ÜRETİM İÇİN TEMİZ) ===
     const normalizedPhone = `+90${phone}`;
     const hashData = (data) => crypto.createHash('sha256').update(data.toLowerCase().trim()).digest('hex');
     const hashedPhone = hashData(normalizedPhone);
@@ -85,7 +85,6 @@ export default async function handler(req, res) {
     const dynamicUrl = `${protocol}://${currentHost}/telefon`;
 
     const payload = {
-      test_event_code: 'TEST35551', // KÖK SEVİYESİNDE (GEÇİCİ TEST İÇİN)
       data: [
         {
           event_name: 'Lead',
@@ -124,7 +123,7 @@ export default async function handler(req, res) {
     console.log('Conversions API yanıtı:', metaResponse.data);
 
     if (metaResponse.data.events_received) {
-      console.log(`Başarılı: ${metaResponse.data.events_received} event gönderildi. Test Kodu: TEST35551`);
+      console.log(`Başarılı: ${metaResponse.data.events_received} event gönderildi.`);
     } else {
       console.error('Conversions API hatası:', metaResponse.data);
     }
