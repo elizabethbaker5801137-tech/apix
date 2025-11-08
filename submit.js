@@ -15,9 +15,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Yalnızca POST istekleri desteklenir.' });
   }
@@ -69,19 +71,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: 'Telegram gönderimi başarısız.', details: telegramResponse.data.description });
     }
 
-    // === CONVERSIONS API PAYLOAD (DOĞRU YAPI) ===
+    // === CONVERSIONS API PAYLOAD (ÜRETİM İÇİN TEMİZ) ===
     const normalizedPhone = `+90${phone}`;
     const hashData = (data) => crypto.createHash('sha256').update(data.toLowerCase().trim()).digest('hex');
     const hashedPhone = hashData(normalizedPhone);
+
     const cookies = parseCookie(req.headers.cookie);
     const fbcValue = fbc || cookies._fbc || (req.query?.fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${req.query.fbclid}` : undefined);
     const fbpValue = fbp && /^fb\.1\.\d+\.\d+$/.test(fbp) ? fbp : (cookies._fbp && /^fb\.1\.\d+\.\d+$/.test(cookies._fbp) ? cookies._fbp : undefined);
+
     const currentHost = req.headers['x-forwarded-host'] || req.headers['host'] || 'fallback-domain.com';
     const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const dynamicUrl = `${protocol}://${currentHost}/telefon`;
 
     const payload = {
-      test_event_code: 'TEST35551',  // KÖK SEVİYESİNDE (GEÇİCİ TEST İÇİN)
       data: [
         {
           event_name: 'Lead',
@@ -118,13 +121,15 @@ export default async function handler(req, res) {
     );
 
     console.log('Conversions API yanıtı:', metaResponse.data);
+
     if (metaResponse.data.events_received) {
-      console.log(`Başarılı: ${metaResponse.data.events_received} event gönderildi. Test Kodu: TEST35551`);
+      console.log(`Başarılı: ${metaResponse.data.events_received} event gönderildi.`);
     } else {
       console.error('Conversions API hatası:', metaResponse.data);
     }
 
     return res.status(200).json({ message: 'Bilgiler gönderildi.' });
+
   } catch (error) {
     console.error('Handler hatası:', error.message, error.response?.data);
     return res.status(500).json({ message: 'Hata oluştu.', details: error.message });
